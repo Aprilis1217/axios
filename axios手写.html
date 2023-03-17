@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手写 axios 实现方式</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container" style="margin-top: 50px;">
+    <h3 class="page-header">手写 axios 实现方式 --- 简化版</h3>
+    <button class="btn btn-primary">发送请求</button>
+    <button class="btn btn-warning">取消请求</button>
+  </div>
+  <script>
+    // 创建 Axios 构造函数
+    function Axios (config) {
+      // 初始化
+      this.config = config; // 为了创建 defaults 默认属性
+      this.interceptors = {
+        request: new InterceptorManage(),
+        response: new InterceptorManage()
+      }
+    }
+    // 给 Axios 原型链上添加相关的方法
+    Axios.prototype.request = function (config) {
+      console.log('发送 Ajax 请求，请求类型为 ' + config.method)
+      // 创建一个 Promise 对象
+      let promise = Promise.resolve(config)
+      console.log(promise) // fulfilled 一定是一个成功的 Promise
+      // 声明一个数组
+      let chains = [dispatchRequest, undefined] // undefined 占位
+      // 处理拦截器
+      // console.log(this.interceptors, '处理拦截器')
+      // 处理请求拦截器
+      this.interceptors.request.handlers.forEach(item => {
+        chains.unshift(item.fulfilled, item.rejected)
+      });
+      // 处理响应拦截器
+      this.interceptors.response.handlers.forEach(item => {
+        chains.push(item.fulfilled, item.rejected)
+      })
+      console.log('拦截器处理之后的 chains=', chains)
+      // 遍历
+      while (chains.length) {
+        promise = promise.then(chains.shift(), chains.shift())
+      }
+      return promise;
+      // 调用 then 方法指定回调
+      // let result = promise.then(chains[0], chains[1])
+      // 返回 promise 成功的结果
+      // return result;
+    }
+
+    // dispatchRequest 函数
+    function dispatchRequest (config) {
+      console.log('dispatchRequest 函数执行')
+      // 调用适配器发送请求
+      return xhrAdapter(config).then(response => {
+        // 请求成功的回调对响应的结果进行转换处理
+        console.log(response)
+        return response;
+      }, error => {
+        throw error;
+      })
+    }
+
+    // adapter 适配器
+    function xhrAdapter (config) {
+      console.log('xhrAdapter 适配器执行')
+      return new Promise((resolve, rejected) => {
+        // 实际是在适配器中发送 Ajax 请求
+        let xhr = new XMLHttpRequest()
+        xhr.open(config.method, config.url)
+        xhr.send()
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve({
+                config, // 配置对象
+                data: xhr.response, // 响应体
+                headers: xhr.getAllResponseHeaders(), // 响应头 ---> 字符串
+                request: xhr, // 请求对象
+                status: xhr.status,// 响应状态码
+                statusText: xhr.statusText // 响应状态字符串
+              })
+            } else {
+              // 失败的状态
+              rejected(new Error('请求失败，失败的状态码为：' + xhr.status))
+            }
+          }
+        }
+        // 关于取消请求的处理
+        if (config.cancelToken) {
+          // 对 cancelToken 对象身上的 promise 对象指定成功的回调
+          config.cancelToken.promise.then(res => {
+            console.log(res, '对 cancelToken 对象身上的 promise 对象指定成功的回调')
+            xhr.abort()
+            // 将整体结果设置为失败
+            rejected(new Error('请求已经被取消！'))
+          })
+        }
+      })
+    }
+    // 取消请求的构造函数
+    function CancelToken (executor) {
+      let resolvePromise; // 声明一个变量
+      // 为实例对象添加属性
+      this.promise = new Promise((resolve) => {
+        // 将成功回调的 resolve 赋值给 resolvePromise
+        resolvePromise = resolve
+      })
+      // 调用 executor 函数
+      executor(function () {
+        // 执行 resolvePromise 函数
+        resolvePromise()
+      })
+    }
+    // 拦截器管理器构造函数 ---> 用来保存回调
+    function InterceptorManage () {
+      this.handlers = []
+    }
+    InterceptorManage.prototype.use = function (fulfilled, rejected) {
+      this.handlers.push({
+        fulfilled,
+        rejected
+      })
+    }
+
+    // 创建一个实例对象
+    let context = new Axios({})
+    // 创建 axios 函数
+    let myAxios = Axios.prototype.request.bind(context)
+    console.dir(myAxios, 'myAxios')
+    // 将 context 属性 config 和 interceptors 添加到 axios 函数对象上
+    Object.keys(context).forEach(key => {
+      myAxios[key] = context[key]
+    })
+    // 设置请求拦截器 config 配置对象
+    myAxios.interceptors.request.use(function one (config) {
+      console.log('请求拦截器 1 号 --- 成功')
+      return config;
+    }, function one (err) {
+      console.log('请求拦截器 1 号 --- 失败')
+      return Promise.rejected(err);
+    })
+    myAxios.interceptors.request.use(function two (config) {
+      console.log('请求拦截器 2 号 --- 成功')
+      return config;
+    }, function two (err) {
+      console.log('请求拦截器 2 号 --- 失败')
+      return Promise.rejected(err);
+    })
+
+    // 设置响应拦截器
+    myAxios.interceptors.response.use(function one (response) {
+      console.log('响应拦截器 1 号 --- 成功')
+      return response;
+    }, function one (err) {
+      console.log('响应拦截器 1 号 --- 失败')
+      return Promise.rejected(err);
+    })
+    myAxios.interceptors.response.use(function two (response) {
+      console.log('响应拦截器 2 号 --- 成功')
+      return response;
+    }, function two (err) {
+      console.log('响应拦截器 2 号 --- 失败')
+      return Promise.rejected(err);
+    })
+    const buttons = document.querySelectorAll('button')
+    let cancel = null;
+    // 发送请求
+    buttons[0].onclick = () => {
+      // 检测上一次请求是否已经完成
+      if (cancel !== null) {
+        cancel()
+      }
+      // 创建 cancelToken 的值
+      let cancelToken = new CancelToken(c => {
+        cancel = c
+      })
+      myAxios({
+        method: 'get',
+        url: 'http://localhost:3000/posts',
+        // 添加配置对象的属性
+        cancelToken
+      }).then(res => {
+        console.log(res)
+        cancel = null
+      })
+    }
+    // 取消请求
+    buttons[1].onclick = () => {
+      cancel()
+    }
+
+
+  </script>
+</body>
+</html>

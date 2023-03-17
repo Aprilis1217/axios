@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>axios 拦截器</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.27.2/axios.min.js"></script>
+</head>
+<body>
+  <div class="container" style="margin-top: 50px;">
+    <h3 class="page-header">拦截器</h3>
+  </div>
+  <script>
+    // 设置请求拦截器
+    axios.interceptors.request.use(config => {
+      console.log('请求拦截器成功 --- 1号')
+      return config;
+    }, error => {
+      console.log('请求拦截器失败 --- 1号')
+      return Promise.reject(error);
+    })
+    axios.interceptors.request.use(config => {
+      console.log('请求拦截器成功 --- 2号')
+      return config;
+    }, error => {
+      console.log('请求拦截器失败 --- 2号')
+      return Promise.reject(error);
+    })
+
+    // 设置响应拦截器
+    axios.interceptors.response.use(response => {
+      console.log('响应拦截器成功 --- 1号')
+      return response;
+    }, error => {
+      console.log('响应拦截器失败 --- 1号')
+      return Promise.reject(error);
+    })
+    axios.interceptors.response.use(response => {
+      console.log('响应拦截器成功 --- 2号')
+      return response;
+    }, error => {
+      console.log('响应拦截器失败 --- 2号')
+      return Promise.reject(error);
+    })
+    /**
+     * 说明：
+     * 请求拦截器会先执行后面的再执行前面的
+     * 而响应拦截器会先执行前面的再执行后面的
+    */
+    // 发送请求
+    axios({
+      method: 'get',
+      url: 'http://localhost:3000/posts'
+    }).then(res => {
+      console.log('自定义成功的回调')
+    }).catch(err => {
+      console.log('自定义失败的回调')
+      return Promise.reject(new Error(err))
+    })
+  </script>
+</body>
+</html>

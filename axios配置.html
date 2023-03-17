@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>axios 基本使用</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.27.2/axios.min.js"></script>
+</head>
+<body>
+  <div class="container" style="margin-top: 50px;">
+    <h3 class="page-header">基本使用</h3>
+    <button class="btn btn-primary">发送GET请求</button>
+    <button class="btn btn-success">发送POST请求</button>
+    <button class="btn btn-warning">发送PUT请求</button>
+    <button class="btn btn-danger">发送DELETE请求</button>
+  </div>
+  <script>
+    console.log('axios', axios)
+    const buttons = document.querySelectorAll('button')
+    // GET 请求
+    buttons[0].onclick = () => {
+      axios({
+        method: 'get', // 请求类型
+        url: 'http://localhost:3000/posts/1', // 请求的 URL
+      }).then(res => {
+        console.log('GET请求', res)
+      })
+    }
+    // POST 请求
+    buttons[1].onclick = () => {
+      axios({
+        method: 'post',
+        url: 'http://localhost:3000/posts',
+        // 请求参数（请求体）
+        data: {
+          title: '麻辣鸡',
+          author: '阿柳'
+        }
+      }).then(res => {
+        console.log('POST请求', res)
+      })
+    }
+    // PUT 请求
+    buttons[2].onclick = () => {
+      axios({
+        method: 'put',
+        url: 'http://localhost:3000/posts/1',
+        // 请求参数（请求体）
+        data: {
+          title: '乌拉西',
+          author: '阿哥'
+        }
+      }).then(res => {
+        console.log('PUT请求', res)
+      })
+    }
+    // DELETE 请求
+    buttons[3].onclick = () => {
+      axios({
+        method: 'delete',
+        url: 'http://localhost:3000/posts/3'
+      }).then(res => {
+        console.log('DELETE请求', res)
+      })
+    }
+  </script>
+</body>
+</html>

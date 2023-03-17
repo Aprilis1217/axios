@@ -1,0 +1,29 @@
+{
+  "posts": [
+    {
+      "title": "乌拉西",
+      "author": "阿哥",
+      "id": 1
+    },
+    {
+      "title": "麻辣鸡",
+      "author": "阿柳",
+      "id": 2
+    },
+    {
+      "title": "麻辣鸡",
+      "author": "阿柳",
+      "id": 4
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "some comment",
+      "postId": 1
+    }
+  ],
+  "profile": {
+    "name": "typicode"
+  }
+}

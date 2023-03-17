@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>axios 取消请求</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.27.2/axios.min.js"></script>
+</head>
+<body>
+  <div class="container" style="margin-top: 50px;">
+    <h3 class="page-header">axios 取消请求</h3>
+    <button class="btn btn-primary">发送请求</button>
+    <button class="btn btn-warning">取消请求</button>
+  </div>
+  <script>
+    const buttons = document.querySelectorAll('button')
+    let cancel = null
+    // 发送请求
+    buttons[0].onclick = () => {
+      // 判断上一次请求是否完成
+      if (cancel !== null) {
+        cancel() // 取消上一次的请求
+      }
+      axios({
+        method: 'get', // 请求类型
+        url: 'http://localhost:3000/posts', // 请求的 URL
+        // 添加配置对象的属性 cancelToken
+        cancelToken: new axios.CancelToken(
+          (c) => {
+            cancel = c
+          }
+        )
+      }).then(res => {
+        console.log('发送请求', res)
+        cancel = null
+      })
+    }
+    // 取消请求
+    buttons[1].onclick = () => {
+      cancel()
+    }
+  </script>
+</body>
+</html>
